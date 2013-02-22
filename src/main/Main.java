@@ -9,6 +9,8 @@ public class Main {
 
 	private static int numberOfLines;
 	private static int wordsPerLine;
+	private static int totalReads = 0;
+	private static int totalWrites = 0;
 	private static HashMap<String, Processor> processors;
 	/**
 	 * @param args
@@ -37,7 +39,7 @@ public class Main {
 		processors.put(p3.getName(), p3);
 		
 		// The shared main memory
-		int[][] mainMemory = new int[1000][1000];
+		int[][] mainMemory = new int[100000][12];
 		
 		String[] inputLines = input.split("\n");
 		
@@ -50,10 +52,26 @@ public class Main {
 			int addressAsDecimalInt = Integer.parseInt(addressAsDecimalString.replaceAll("\r", ""));
 			int mainMemoryLine = addressAsDecimalInt/wordsPerLine;
 			int cacheLine = mainMemoryLine % numberOfLines;
+			double wordNumber = Double.parseDouble(addressAsDecimalString.replaceAll("\r", ""))/wordsPerLine;
+			int wordIndex = (int)((wordNumber % 1) * 100) / 25;
+			int tag = mainMemoryLine/numberOfLines;
+			if (operation.equals("R")){
+				
+				totalReads++;
+				processor.performRead(mainMemoryLine, cacheLine, tag);
+				System.out.println("ReadPerformed");
+			}
 			
-
+			if (operation.equals("W")){
+				
+				totalWrites++;
+				processor.performWrite(mainMemoryLine, cacheLine, tag);
+				System.out.println("WritePerformed");
+			}
 			
 		}
+		
+		System.out.println("dkjgbdfi");
 		
 	}
 	
