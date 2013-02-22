@@ -12,6 +12,7 @@ public class Main {
 	private static int totalReads = 0;
 	private static int totalWrites = 0;
 	private static HashMap<String, Processor> processors;
+	public static Processor[] arrayOfProcessors = new Processor[4];
 	/**
 	 * @param args
 	 * @throws Exception 
@@ -28,15 +29,19 @@ public class Main {
 		// We need four processors
 		Processor p0 = new Processor("P0", numberOfLines, wordsPerLine);
 		processors.put(p0.getName(), p0);
+		arrayOfProcessors[0] = p0;
 	
 		Processor p1 = new Processor("P1", numberOfLines, wordsPerLine);
 		processors.put(p1.getName(), p1);
+		arrayOfProcessors[1] = p1;
 		
 		Processor p2 = new Processor("P2", numberOfLines, wordsPerLine);
 		processors.put(p2.getName(), p2);
+		arrayOfProcessors[2] = p2;
 		
 		Processor p3 = new Processor("P3", numberOfLines, wordsPerLine);
 		processors.put(p3.getName(), p3);
+		arrayOfProcessors[3] = p3;
 		
 		// The shared main memory
 		int[][] mainMemory = new int[100000][12];
@@ -59,20 +64,18 @@ public class Main {
 				
 				totalReads++;
 				processor.performRead(mainMemoryLine, cacheLine, tag);
-				System.out.println("ReadPerformed");
+			//	System.out.println("ReadPerformed");
 			}
 			
 			if (operation.equals("W")){
 				
 				totalWrites++;
 				processor.performWrite(mainMemoryLine, cacheLine, tag);
-				System.out.println("WritePerformed");
+			//	System.out.println("WritePerformed");
 			}
 			
-		}
-		
-		System.out.println("dkjgbdfi");
-		
+		}	
+		System.out.println("dkfljnd");
 	}
 	
 	private static String readFile( String file ) throws IOException {
