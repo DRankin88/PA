@@ -42,10 +42,7 @@ public class Main {
 		Processor p3 = new Processor("P3", numberOfLines, wordsPerLine);
 		processors.put(p3.getName(), p3);
 		arrayOfProcessors[3] = p3;
-		
-		// The shared main memory
-		int[][] mainMemory = new int[100000][12];
-		
+	
 		String[] inputLines = input.split("\n");
 		
 		for(String line : inputLines){
@@ -57,23 +54,20 @@ public class Main {
 			int addressAsDecimalInt = Integer.parseInt(addressAsDecimalString.replaceAll("\r", ""));
 			int mainMemoryLine = addressAsDecimalInt/wordsPerLine;
 			int cacheLine = mainMemoryLine % numberOfLines;
-			double wordNumber = Double.parseDouble(addressAsDecimalString.replaceAll("\r", ""))/wordsPerLine;
-			int wordIndex = (int)((wordNumber % 1) * 100) / 25;
 			int tag = mainMemoryLine/numberOfLines;
 			if (operation.equals("R")){
 				
 				totalReads++;
 				processor.performRead(mainMemoryLine, cacheLine, tag);
-			//	System.out.println("ReadPerformed");
+			
 			}
 			
 			if (operation.equals("W")){
 				
 				totalWrites++;
 				processor.performWrite(mainMemoryLine, cacheLine, tag);
-			//	System.out.println("WritePerformed");
-			}
 			
+			}
 		}	
 		System.out.println("dkfljnd");
 	}
@@ -89,9 +83,7 @@ public class Main {
 	        stringBuilder.append( ls );
 	    }
 
-	    return stringBuilder.toString();
-	}
-
+	 return stringBuilder.toString();
 	
+	}	
 }
-
