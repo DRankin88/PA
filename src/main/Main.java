@@ -5,8 +5,10 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 
 public class Main {
 
@@ -23,12 +25,14 @@ public class Main {
 	private static double percentageOfOneAccesses;
 	private static double percentageOfTwoAccesses;
 	private static double percentageOfGreaterThanTwoAccesses;
+	private static HashMap<Integer, HashSet<Processor>> memoryAddresses;
 	/**
 	 * @param args
 	 * @throws Exception 
 	 */
 	public static void main(String[] args) throws Exception {
 
+		memoryAddresses = new HashMap<Integer, HashSet<Processor>>();
 		//args format 0 = numberOfLines, 1 = wordsPerLine, 2 = fileToRead
 		numberOfLines = Integer.parseInt(args[0]);
 		wordsPerLine = Integer.parseInt(args[1]);
@@ -70,29 +74,25 @@ public class Main {
 			String operation = currentLine[1];
 			int addressAsDecimalInt = Integer.parseInt(currentLine[2].replaceAll("\r", ""));
 			int mainMemoryLine = addressAsDecimalInt/wordsPerLine;
+			HashSet<Processor> processors = memoryAddresses.get(addressAsDecimalInt);
+			if (processors != null){
+				
+				processors.add(processor);
+				memoryAddresses.put(addressAsDecimalInt, processors);
+				
+			}
+			else{
+				HashSet<Processor> newProcessor = new HashSet<Processor>();
+				newProcessor.add(processor);
+				memoryAddresses.put(addressAsDecimalInt, newProcessor);
+			}
 			int cacheLine = mainMemoryLine % numberOfLines;
 			int tag = mainMemoryLine/numberOfLines;
 
 			if (operation.equals("R")){
 
 				CacheLine thisLine = cacheLines.get(cacheLine);
-				if (thisLine.accessorInformation.containsKey(processor)){
-					String accessType = thisLine.accessorInformation.get(processor);
-					if (accessType.equals("R")){
-						thisLine.accessorInformation.put(processor, "R");
-					}
-					else if (accessType.equals("R W")){
-					}
-					else if (accessType.equals("W")){
-						thisLine.accessorInformation.put(processor, "R W");
-					}
-					else{
-						thisLine.accessorInformation.put(processor, "R");
-					}
-				}
-				else{
-					thisLine.accessorInformation.put(processor, "R");
-				}
+				thisLine.addAccessInformation(processor, tag, 1);
 				totalReads++;
 				processor.performRead(mainMemoryLine, cacheLine, tag);
 
@@ -101,31 +101,15 @@ public class Main {
 			if (operation.equals("W")){
 
 				CacheLine thisLine = cacheLines.get(cacheLine);
-				String accessType = thisLine.accessorInformation.get(processor);
-				if (thisLine.accessorInformation.containsKey(processor)){
-
-					if (accessType.equals("W")){
-						thisLine.accessorInformation.put(processor, "W");
-					}
-					else if (accessType.equals("R W")){
-					}
-					else if (accessType.equals("R")){
-						thisLine.accessorInformation.put(processor, "R W");
-					}
-					else{
-						thisLine.accessorInformation.put(processor, "W");
-					}
-				}
-				else{
-					thisLine.accessorInformation.put(processor, "W");
-				}
 				totalWrites++;
+				thisLine.addAccessInformation(processor, tag, 2);
 				processor.performWrite(mainMemoryLine, cacheLine, tag);
 
 			}
 		}	
 
-		ArrayList<CacheLine>temp = cacheLines;
+		ArrayList<CacheLine> temp = cacheLines;
+		HashMap<Integer, HashSet<Processor>> memoryAddressesTemp = memoryAddresses;
 		collectData();
 		printReport();
 
@@ -141,8 +125,10 @@ public class Main {
 			cacheLine.collectData();
 		}
 		
+		
+		
 		for (CacheLine cacheLine : cacheLines){
-			if(cacheLine.numberOfAccessors == 1){
+			if(cacheLine.isPrivate == true){
 				privateLines++;
 			}
 			if(cacheLine.wasSharedReadOnly == true){
@@ -156,8 +142,49 @@ public class Main {
 		percentageOfPrivateCacheAccesses = privateLines / numberOfLines;
 		percentageOfSharedReadOnlyAccesses = numberOfSharedReadOnly / numberOfLines;
 		percentageOfSharedReadWriteAccesses = numberOfSharedReadWrite / numberOfLines;
-		System.out.println("lkbdfl");
+
+		// 1, 2 and > 2 addresses
+		double[] ProcessorPercentages = accessPercentages();
+		System.out.println("dfu");
+	}
+	
+	private static double[] accessPercentages(){
 		
+		double One = 0;
+		double two = 0;
+		double moreThanTwo = 0;
+		
+		Iterator it = memoryAddresses.entrySet().iterator();
+		while (it.hasNext()){
+			Map.Entry pairs = (Entry) it.next();
+			
+			HashSet<Processor> processors = (HashSet<Processor>) pairs.getValue();
+			int number = processors.size();
+			
+			if(number == 1) {
+				
+				One++;
+				
+			}
+			if (number == 2){
+				
+				two++;
+				
+			}
+			if (number > 2){
+				
+				moreThanTwo++;
+				
+			}
+		}
+		
+		double[] answer = new double[3];
+		
+		answer[0] = One / memoryAddresses.size(); 
+		answer[1] = two / memoryAddresses.size(); 
+		answer[2] = moreThanTwo / memoryAddresses.size(); 
+		
+		return answer;
 	}
 
 	private static String readFile( String file ) throws IOException {

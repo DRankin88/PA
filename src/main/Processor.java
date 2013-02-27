@@ -115,9 +115,12 @@ public class Processor {
 		if (cachedTag == tag && MSIbit == 0){
 
 			if (L1Cache[cacheLine][2] == 1){
+			
 				coherenceMiss++;
 				L1Cache[cacheLine][2] = 0;
+			
 			}
+
 			writeMisses++;
 			// Load block in and set tag
 			L1Cache[cacheLine][1] = tag;
@@ -146,6 +149,7 @@ public class Processor {
 			// Set the MSI bit to modified
 			L1Cache[cacheLine][0] = 2;	
 			busSnoop(1, cacheLine, tag);
+		
 		}
 
 		// Block in shared state but tag is incorrect so write miss
@@ -265,8 +269,8 @@ public class Processor {
 			if (value != 0){
 				uniqueAccesses++;
 			}
-
 		}
+		
 	//	coherenceMiss = coherenceMiss - uniqueAccesses;
 		double coherenceMissPercentage = (double) coherenceMiss / totalMisses * 100;
 		report.append("Percentage misses caused by coherence: " + coherenceMissPercentage + "%" + "\n");
