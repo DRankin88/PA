@@ -55,6 +55,7 @@ public class Processor {
 		// Read miss and block is invalid
 		if (cachedTag == tag && MSIbit == 0){
 
+			// Is this because of coherence
 			if (L1Cache[cacheLine][2] == 1){
 				coherenceMiss++;
 				L1Cache[cacheLine][2] = 0;

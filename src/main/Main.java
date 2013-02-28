@@ -26,6 +26,7 @@ public class Main {
 	private static double percentageOfTwoAccesses;
 	private static double percentageOfGreaterThanTwoAccesses;
 	private static HashMap<Integer, HashSet<Processor>> memoryAddresses;
+	private static double[] processorPercentages = new double[3];
 	/**
 	 * @param args
 	 * @throws Exception 
@@ -67,13 +68,20 @@ public class Main {
 
 		String[] inputLines = input.split("\n");
 
+		// Now read through the trace file one line at a time
 		for(String line : inputLines){
 
 			String[] currentLine = line.split(" ");
 			Processor processor = processors.get(currentLine[0]);
 			String operation = currentLine[1];
+			
+			// Calculate addresses, tags, lines etc
 			int addressAsDecimalInt = Integer.parseInt(currentLine[2].replaceAll("\r", ""));
 			int mainMemoryLine = addressAsDecimalInt/wordsPerLine;
+			int cacheLine = mainMemoryLine % numberOfLines;
+			int tag = mainMemoryLine/numberOfLines;
+			
+			// Store the information about who is accessing what line
 			HashSet<Processor> processors = memoryAddresses.get(addressAsDecimalInt);
 			if (processors != null){
 				
@@ -86,9 +94,9 @@ public class Main {
 				newProcessor.add(processor);
 				memoryAddresses.put(addressAsDecimalInt, newProcessor);
 			}
-			int cacheLine = mainMemoryLine % numberOfLines;
-			int tag = mainMemoryLine/numberOfLines;
 
+			// After finding out which operation is desired tell the 
+			// processor to execute a read or a write
 			if (operation.equals("R")){
 
 				CacheLine thisLine = cacheLines.get(cacheLine);
@@ -107,9 +115,6 @@ public class Main {
 
 			}
 		}	
-
-		ArrayList<CacheLine> temp = cacheLines;
-		HashMap<Integer, HashSet<Processor>> memoryAddressesTemp = memoryAddresses;
 		collectData();
 		printReport();
 
@@ -144,8 +149,8 @@ public class Main {
 		percentageOfSharedReadWriteAccesses = numberOfSharedReadWrite / numberOfLines;
 
 		// 1, 2 and > 2 addresses
-		double[] ProcessorPercentages = accessPercentages();
-		System.out.println("dfu");
+		processorPercentages = accessPercentages();
+
 	}
 	
 	private static double[] accessPercentages(){
@@ -180,9 +185,9 @@ public class Main {
 		
 		double[] answer = new double[3];
 		
-		answer[0] = One / memoryAddresses.size(); 
-		answer[1] = two / memoryAddresses.size(); 
-		answer[2] = moreThanTwo / memoryAddresses.size(); 
+		answer[0] = One / memoryAddresses.size() * 100; 
+		answer[1] = two / memoryAddresses.size() * 100; 
+		answer[2] = moreThanTwo / memoryAddresses.size() * 100; 
 		
 		return answer;
 	}
@@ -226,8 +231,10 @@ public class Main {
 			System.out.println("\n");
 		}
 
-		System.out.println("dflkhbdlf");
-
+		System.out.println("The percentage of memory access that were to one processor is " + processorPercentages[0] + "\n");
+		System.out.println("The percentage of memory access that were to two processors is " + processorPercentages[1] + "\n");
+		System.out.println("The percentage of memory access that were to more than two processors is " + processorPercentages[2] + "\n");
+		
 	}
 
 }
