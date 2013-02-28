@@ -19,14 +19,9 @@ public class Main {
 	private static HashMap<String, Processor> processors;
 	public static Processor[] arrayOfProcessors = new Processor[4];
 	private static ArrayList<CacheLine> cacheLines;
-	private static double percentageOfPrivateCacheAccesses;
-	private static double percentageOfSharedReadOnlyAccesses;
-	private static double percentageOfSharedReadWriteAccesses;
-	private static double percentageOfOneAccesses;
-	private static double percentageOfTwoAccesses;
-	private static double percentageOfGreaterThanTwoAccesses;
 	private static HashMap<Integer, HashSet<Processor>> memoryAddresses;
 	private static double[] processorPercentages = new double[3];
+	private static double[] cacheLinePercentages = new double[3];
 	/**
 	 * @param args
 	 * @throws Exception 
@@ -74,20 +69,20 @@ public class Main {
 			String[] currentLine = line.split(" ");
 			Processor processor = processors.get(currentLine[0]);
 			String operation = currentLine[1];
-			
+
 			// Calculate addresses, tags, lines etc
 			int addressAsDecimalInt = Integer.parseInt(currentLine[2].replaceAll("\r", ""));
 			int mainMemoryLine = addressAsDecimalInt/wordsPerLine;
 			int cacheLine = mainMemoryLine % numberOfLines;
 			int tag = mainMemoryLine/numberOfLines;
-			
+
 			// Store the information about who is accessing what line
 			HashSet<Processor> processors = memoryAddresses.get(addressAsDecimalInt);
 			if (processors != null){
-				
+
 				processors.add(processor);
 				memoryAddresses.put(addressAsDecimalInt, processors);
-				
+
 			}
 			else{
 				HashSet<Processor> newProcessor = new HashSet<Processor>();
@@ -122,73 +117,70 @@ public class Main {
 
 	private static void collectData(){
 
-		int privateLines = 0;
+		int nonPrivateLines = 0;
 		int numberOfSharedReadOnly = 0;
 		int numberOfSharedReadWrite = 0;
-		
+
 		for (CacheLine cacheLine : cacheLines){
-			cacheLine.collectData();
+
+			numberOfSharedReadOnly += cacheLine.operationsToSharedReadOnlyLine;
+			numberOfSharedReadWrite += cacheLine.operationsToSharedReadWriteLine;
+			nonPrivateLines += cacheLine.operationsToPrivateLine;
+
 		}
-		
-		
-		
-		for (CacheLine cacheLine : cacheLines){
-			if(cacheLine.isPrivate == true){
-				privateLines++;
-			}
-			if(cacheLine.wasSharedReadOnly == true){
-				numberOfSharedReadOnly++;
-			}
-			if(cacheLine.wasSharedReadWrite == true){
-				numberOfSharedReadWrite++;
-			}
-		}
-		
-		percentageOfPrivateCacheAccesses = privateLines / numberOfLines;
-		percentageOfSharedReadOnlyAccesses = numberOfSharedReadOnly / numberOfLines;
-		percentageOfSharedReadWriteAccesses = numberOfSharedReadWrite / numberOfLines;
+
+		ArrayList<CacheLine> temp = cacheLines;
+
+		double totalOperations = totalReads + totalWrites;		
+		double privatePercent = (nonPrivateLines/totalOperations) * 100;
+		double sharedReadWritePercent = (numberOfSharedReadWrite/totalOperations) * 100;
+		double sharedReadOnlyPercent = (numberOfSharedReadOnly/totalOperations) * 100;
+
+		cacheLinePercentages[0] = privatePercent;
+		cacheLinePercentages[1] = sharedReadOnlyPercent;
+		cacheLinePercentages[2] = sharedReadWritePercent;
 
 		// 1, 2 and > 2 addresses
 		processorPercentages = accessPercentages();
 
 	}
-	
+
 	private static double[] accessPercentages(){
-		
+
 		double One = 0;
 		double two = 0;
 		double moreThanTwo = 0;
-		
+
 		Iterator it = memoryAddresses.entrySet().iterator();
 		while (it.hasNext()){
 			Map.Entry pairs = (Entry) it.next();
-			
+
 			HashSet<Processor> processors = (HashSet<Processor>) pairs.getValue();
 			int number = processors.size();
-			
+
 			if(number == 1) {
-				
+
 				One++;
-				
+
 			}
 			if (number == 2){
-				
+
 				two++;
-				
+
 			}
 			if (number > 2){
-				
+
 				moreThanTwo++;
-				
+
 			}
 		}
-		
+
 		double[] answer = new double[3];
-		
+
 		answer[0] = One / memoryAddresses.size() * 100; 
 		answer[1] = two / memoryAddresses.size() * 100; 
 		answer[2] = moreThanTwo / memoryAddresses.size() * 100; 
-		
+
 		return answer;
 	}
 
@@ -231,10 +223,13 @@ public class Main {
 			System.out.println("\n");
 		}
 
-		System.out.println("The percentage of memory access that were to one processor is " + processorPercentages[0] + "\n");
-		System.out.println("The percentage of memory access that were to two processors is " + processorPercentages[1] + "\n");
-		System.out.println("The percentage of memory access that were to more than two processors is " + processorPercentages[2] + "\n");
-		
+		System.out.println("The percentage of memory access that were to one processor is " + processorPercentages[0] + "%");
+		System.out.println("The percentage of memory access that were to two processors is " + processorPercentages[1] + "%");
+		System.out.println("The percentage of memory access that were to more than two processors is " + processorPercentages[2] + "%"  + "\n\n");
+
+		System.out.println("The percentage of memory accesses that were to private cache lines is " + cacheLinePercentages[0] + "%");
+		System.out.println("The percentage of memory accesses that were to shared read only lines is " + cacheLinePercentages[1] + "%");
+		System.out.println("The percentage of memory accesses that were to shared read and write lines is " + cacheLinePercentages[2] + "%"  + "\n");
 	}
 
 }

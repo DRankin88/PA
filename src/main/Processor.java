@@ -27,10 +27,14 @@ public class Processor {
 
 	public Processor(String name, int linesInCache, int wordsInLine){
 
-		L1Cache = new int[linesInCache][3];
+		L1Cache = new int[linesInCache][4];
 		this.name = name;
 		this.accessedLine = new int[linesInCache];
+		for (int i = 0; i < L1Cache.length; i++){
 
+			L1Cache[i][1] = -1;
+
+		}
 	}
 
 	public void performRead(int mainMemoryLine, int cacheLine, int tag){
@@ -39,6 +43,16 @@ public class Processor {
 		// Get the MSIbit and the tag out of the cache for this line
 		int MSIbit = L1Cache[cacheLine][0];
 		int cachedTag = L1Cache[cacheLine][1];
+
+		if (tag != cachedTag){
+			L1Cache[cacheLine][3] = 0;
+		}
+		else if(L1Cache[cacheLine][3] == 0){
+			L1Cache[cacheLine][3] = 1;
+		}
+		else if (L1Cache[cacheLine][3] == 2){
+			L1Cache[cacheLine][3] = 3;		
+		}
 
 		// Read miss and the block is invalid
 		if (cachedTag != tag && MSIbit == 0){
@@ -73,6 +87,7 @@ public class Processor {
 		else if (cachedTag == tag && MSIbit == 1){
 			//Do nothing special locally
 			readHit++;
+			L1Cache[cacheLine][3] = 1;
 		}
 
 		// Read miss and block is shared
@@ -89,6 +104,7 @@ public class Processor {
 		else if (cachedTag == tag && MSIbit == 2){
 			// Do nothing special locally
 			readHit++;
+			L1Cache[cacheLine][3] = 1;
 
 		}
 
@@ -112,14 +128,24 @@ public class Processor {
 		int MSIbit = L1Cache[cacheLine][0];
 		int cachedTag = L1Cache[cacheLine][1];
 
+		if (tag != cachedTag){
+			L1Cache[cacheLine][3] = 0;
+		}
+		else if (L1Cache[cacheLine][3] == 1){
+			L1Cache[cacheLine][3] = 3;
+		}
+		else if (L1Cache[cacheLine][3] == 0){
+			L1Cache[cacheLine][3] = 2;
+		}
+
 		// Tag is correct but block is invalid so write miss
 		if (cachedTag == tag && MSIbit == 0){
 
 			if (L1Cache[cacheLine][2] == 1){
-			
+
 				coherenceMiss++;
 				L1Cache[cacheLine][2] = 0;
-			
+
 			}
 
 			writeMisses++;
@@ -150,7 +176,7 @@ public class Processor {
 			// Set the MSI bit to modified
 			L1Cache[cacheLine][0] = 2;	
 			busSnoop(1, cacheLine, tag);
-		
+
 		}
 
 		// Block in shared state but tag is incorrect so write miss
@@ -271,8 +297,8 @@ public class Processor {
 				uniqueAccesses++;
 			}
 		}
-		
-	//	coherenceMiss = coherenceMiss - uniqueAccesses;
+
+		//	coherenceMiss = coherenceMiss - uniqueAccesses;
 		double coherenceMissPercentage = (double) coherenceMiss / totalMisses * 100;
 		report.append("Percentage misses caused by coherence: " + coherenceMissPercentage + "%" + "\n");
 
